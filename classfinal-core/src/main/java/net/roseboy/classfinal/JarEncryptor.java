@@ -121,18 +121,6 @@ public class JarEncryptor {
         });
         allFile.addAll(libJarFiles);
 
-        //压缩静态文件
-//        allFile.forEach(s -> {
-//            if (!s.endsWith(".ftl")) {
-//                return;
-//            }
-//            File file = new File(s);
-//            String code = IoUtils.readTxtFile(file);
-//            code = HtmlUtils.removeComments(code);
-//            code = HtmlUtils.removeBlankLine(code);
-//            IoUtils.writeTxtFile(file, code);
-//        });
-
         //[2]提取所有需要加密的class文件
         List<File> classFiles = filterClasses(allFile);
 
@@ -143,11 +131,15 @@ public class JarEncryptor {
         List<String> encryptClass = encryptClass(classFiles);
         this.encryptFileCount = encryptClass.size();
 
+
+        ClassPool pool = new ClassPool(null);
+        pool.appendSystemPath();
+
         //[5]清空class方法体，并保存文件
-        clearClassMethod(classFiles);
+        clearClassMethod(classFiles, pool);
 
         //[6]加密配置文件
-        encryptConfigFile();
+        encryptConfigFile(pool);
 
         //[7]打包回去
         String result = packageJar(libJarFiles);
@@ -242,9 +234,8 @@ public class JarEncryptor {
      *
      * @param classFiles jar/war 下需要加密的class文件
      */
-    private void clearClassMethod(List<File> classFiles) {
+    private void clearClassMethod(List<File> classFiles,ClassPool pool ) {
         //初始化javassist
-        ClassPool pool = ClassPool.getDefault();
         //[1]把所有涉及到的类加入到ClassPool的classpath
         //[1.1]lib目录所有的jar加入classpath
         ClassUtils.loadClassPath(pool, this.targetLibDir);
@@ -340,7 +331,7 @@ public class JarEncryptor {
     /**
      * 加密classes下的配置文件
      */
-    private void encryptConfigFile() {
+    private void encryptConfigFile(ClassPool pool) {
         if (this.cfgfiles == null || this.cfgfiles.size() == 0) {
             return;
         }
@@ -361,7 +352,7 @@ public class JarEncryptor {
             try {
                 String thisJar = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
                 //获取 框架 读取 配置文件的类,将密码注入该类
-                bytes = ClassUtils.insertCode(clazz, javaCode, line, this.targetLibDir, new File(thisJar));
+                bytes = ClassUtils.insertCode(pool,clazz, javaCode, line, this.targetLibDir, new File(thisJar));
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.debug(e.getClass().getName() + ":" + e.getMessage());
