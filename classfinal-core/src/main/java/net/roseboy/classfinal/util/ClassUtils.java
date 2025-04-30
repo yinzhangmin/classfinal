@@ -157,9 +157,10 @@ public class ClassUtils {
      * @return 修改后的字节数组
      * @throws Exception Exception
      */
-    public static byte[] insertCode(ClassPool pool, String classMethod, String javaCode, int line, File libDir, File thisJar) throws Exception {
+    public static byte[] insertCode(String classMethod, String javaCode, int line, File libDir, File thisJar) throws Exception {
         String className = classMethod.split("#")[0];
         String methodName = classMethod.split("#")[1];
+        ClassPool pool = ClassPool.getDefault();
         loadClassPath(pool, libDir);
         if (thisJar != null && thisJar.exists()) {
             loadClassPath(pool, thisJar);

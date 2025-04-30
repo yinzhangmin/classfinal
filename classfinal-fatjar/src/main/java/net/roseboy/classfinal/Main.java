@@ -4,7 +4,6 @@ package net.roseboy.classfinal;
 import net.roseboy.classfinal.util.*;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,49 +22,135 @@ public class Main {
      * @param args 参数
      */
     public static void main(String[] args) {
-        run("D:\\a\\jar\\hanxiinfotech-app-start.jar");
-        run("D:\\a\\war\\hanxiinfotech-app-start.war");
-    }
 
 
-    private static void run(String value) {
 
-        String path = value, libjars = " hanxiinfotech-app-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-api-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-ass-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-assess-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-common-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-da-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-demo-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-hr-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-hw-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-jc-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-manage-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-meritpay-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-reportForm-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-rms-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-scheme-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-talentEvaluation-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-module-upload-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-hnc-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-information-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-mm-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-pc-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-pe-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-pw-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-sk-1.0-SNAPSHOT.jar,\n" +
-                "            hanxiinfotech-modules-ss-1.0-SNAPSHOT.jar,", packages = "", excludeClass = "", classpath = "", password = null, code = "", cfgfiles = "";
+
+
+
+        Const.pringInfo();
+        Scanner scanner = new Scanner(System.in);
+
+        //参数配置
+        CmdLineOption cmd = new CmdLineOption();
+        cmd.addOption("packages", true, "加密的包名(可为空,多个用\",\"分割)");
+        cmd.addOption("pwd", true, "加密密码");
+        cmd.addOption("code", true, "机器码");
+        cmd.addOption("exclude", true, "排除的类名(可为空,多个用\",\"分割)");
+        cmd.addOption("file", true, "加密的jar/war路径");
+        cmd.addOption("libjars", true, "jar/war lib下的jar(可为空,多个用\",\"分割)");
+        cmd.addOption("classpath", true, "依赖jar包目录(可为空,多个用\",\"分割)");
+        cmd.addOption("cfgfiles", true, "需要加密的配置文件(可为空,多个用\",\"分割)");
+        cmd.addOption("Y", false, "无需确认");
+        cmd.addOption("debug", false, "调试模式");
+        cmd.addOption("C", false, "生成机器码");
+        cmd.parse(args);
+
+        if (cmd.hasOption("C")) {
+            makeCode();
+            return;
+        }
+
+        //全部参数(需要加密的class路径,lib下的jar,包名,排除的class,依赖jar包路径,密码,机器码,需要加密的配置文件)
+        String path=null,libjars,packages,excludeClass,classpath,password=null,code,cfgfiles;
 
         //没有参数手动输入
+        if (args == null || args.length == 0) {
+            while (StrUtils.isEmpty(path)) {
+                Log.print("请输入需要加密的jar/war路径:");
+                path = scanner.nextLine();
+            }
+
+            Log.print("请输入jar/war包lib下要加密jar文件名(多个用\",\"分割):");
+            libjars = scanner.nextLine();
+
+            Log.print("请输入需要加密的包名(可为空,多个用\",\"分割):");
+            packages = scanner.nextLine();
+
+            Log.print("请输入需要排除的类名(可为空,多个用\",\"分割):");
+            excludeClass = scanner.nextLine();
+
+            Log.print("请输入依赖jar包目录(可为空,多个用\",\"分割):");
+            classpath = scanner.nextLine();
+
+            Log.print("请输入要加密的配置文件名(可为空,多个用\",\"分割):");
+            cfgfiles = scanner.nextLine();
 
 
-        packages = "com.hanxiinfotech.**";//包名过滤
-        excludeClass = "com.hanxiinfotech.StartSpringApplication";//排除的类
-        password = "#";
-        classpath = "";
-        cfgfiles = "";
-        Const.DEBUG = true;
+            Log.print("请输入机器码(可为空):");
+            code = scanner.nextLine();
 
+            while (StrUtils.isEmpty(password)) {
+                Log.print("请输入加密密码:");
+                password = scanner.nextLine();
+            }
+        }else{//在参数中取
+            path = cmd.getOptionValue("file", "");
+            libjars = cmd.getOptionValue("libjars", "");
+            packages = cmd.getOptionValue("packages", "");
+            excludeClass = cmd.getOptionValue("exclude", "");
+            classpath = cmd.getOptionValue("classpath", "");
+            password = cmd.getOptionValue("pwd", "");
+            code = cmd.getOptionValue("code", "");
+            cfgfiles = cmd.getOptionValue("cfgfiles", "");
+        }
+
+        //test数据
+        if ("1".equals(path)) {
+            path = "/Users/roseboy/fsdownload/yiyon-package-liuyuan-1.0.0.jar";
+            libjars = "yiyon-*.jar,aspectjweaver-1.8.13.jar,a.jar";
+            packages = "com.yiyon,net.roseboy.*";//包名过滤
+            excludeClass = "org.spring.*";//排除的类
+            password = "123456";
+            classpath = "/Users/roseboy/code-space/apache-tomcat-8.5.32/lib";
+            cfgfiles = "*.yml";
+            Const.DEBUG = false;
+        } else if ("2".equals(path)) {
+            path = "/Users/roseboy/code-space/pig_project/target/pig_project_maven.war";
+            packages = "net.roseboy";//包名过滤
+            excludeClass = "org.spring";//排除的类
+            password = "#";
+            classpath = "/Users/roseboy/code-space/apache-tomcat-8.5.32/lib";
+            Const.DEBUG = true;
+        } else if ("3".equals(path)) {
+            path = "/Users/roseboy/Desktop/iyun.node.dicomserver.jar";
+            packages = "com,org";//包名过滤
+            password = "1234";
+            Const.DEBUG = true;
+        }
+
+        Log.println();
+        Log.println("加密信息如下:");
+        Log.println("-------------------------");
+        Log.println("1. jar/war路径:      " + path);
+        Log.println("2. lib下的jar:       " + libjars);
+        Log.println("3. 包名前缀:          " + packages);
+        Log.println("4. 排除的类名:        " + excludeClass);
+        Log.println("5. 加密配置文件:      " + cfgfiles);
+        Log.println("6. ClassPath:       " + classpath);
+        Log.println("7. 密码:             " + password);
+        Log.println("8. 机器码:           " + code);
+        Log.println("-------------------------");
+        Log.println();
+
+        String yes;
+        if (cmd.hasOption("Y")) {
+            yes = "Y";
+        } else {
+            Log.println("确定执行吗？(Y/n)");
+            yes = scanner.nextLine();
+            while (!"n".equals(yes) && !"Y".equals(yes)) {
+                Log.println("Yes or No ？[Y/n]");
+                yes = scanner.nextLine();
+            }
+        }
+        IoUtils.close(scanner);
+
+        if (!"Y".equals(yes)) {
+            Log.println("已取消！");
+            return;
+        }
+        Log.println("处理中...");
         List<String> includeJarList = StrUtils.toList(libjars);
         List<String> packageList = StrUtils.toList(packages);
         List<String> excludeClassList = StrUtils.toList(excludeClass);
